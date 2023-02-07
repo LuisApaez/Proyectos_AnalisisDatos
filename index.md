@@ -1,3 +1,4 @@
-# Prueba
+# Links auxiliares para los proyectos
 
-[Link 1](CursoPrope/TableroPowerBI/DiagramaRelacional.html)
+* Proyecto 1
+[Link diagrama relacional](CursoPrope/TableroPowerBI/DiagramaRelacional.html)
