@@ -12,11 +12,11 @@ fueron formalizados en las secuencias didácticas.
 Ahora bien, para la información recopilada consideraremos dos archivos csv:
 * Encuestas: Recopila información sobre los diferentes talleres brindados, donde las preguntas evalúan qué tan claro fue la exposición de los temas, el lenguaje que se ocupó, etcétera. De manera global las encuestas evalúan los talleres. En las encuestas se evalúan tanto los talleres como las secuencias didácticas.
 
-[Archivo csv](Datasets/Encuestas.csv)
+[Archivo csv](CursoPrope/Datasets/Encuestas.csv)
 
 * Asistencias: Recopila la asistencia de los participantes del curso propedéutico en la primer semana del curso (es decir, recopila las asistencias de 5 días).
 
-[Archivo csv](Datasets/Asistencias.csv)
+[Archivo csv](CursoPrope/Datasets/Asistencias.csv)
 
 Con base en lo anterior, es natural enfocar nuestro análisis de datos en ver las evaluaciones que se les dieron a cada uno de los talleres, o ver de manera global la evalución conjunta de todos los talleres para determinar una evalución general al curso propedéutico. Podremos ver también cuáles fueron los aspectos (o preguntas de la encuesta) que obtuvieron mejor o peor respuesta; por ejemplo, si logramos identificar las preguntas de la encuesta que obtuvieron peor respuesta, se puede enfocar más en dicho tema o abordarlo de una manera distinta en los siguientes cursos propedéuticos. En teoría, cada participante debía responder sólo una vez la encuesta en dicha primer semana.
 
