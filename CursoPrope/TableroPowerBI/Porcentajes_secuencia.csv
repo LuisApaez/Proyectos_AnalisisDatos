@@ -1,0 +1,31 @@
+,Taller,Tipo,Porcentaje
+0,serpientes estocasticas y escaleras aleatorias,Positivos,95.23809523809524
+1,serpientes estocasticas y escaleras aleatorias,Negativos,4.761904761904762
+0,logica y sudoku,Positivos,88.88888888888889
+1,logica y sudoku,Negativos,11.11111111111111
+0,cartas en set,Positivos,100.0
+1,cartas en set,Negativos,0.0
+0,bingo del multiverso,Positivos,100.0
+1,bingo del multiverso,Negativos,0.0
+0,juntos con conjuntos,Positivos,92.3076923076923
+1,juntos con conjuntos,Negativos,7.6923076923076925
+0,carrera de probabilidades con mario kart,Positivos,95.23809523809524
+1,carrera de probabilidades con mario kart,Negativos,4.761904761904762
+0,los caminos del infinito (no son como yo pensaba),Positivos,94.44444444444444
+1,los caminos del infinito (no son como yo pensaba),Negativos,5.555555555555555
+0,aliens mentirosos,Positivos,83.33333333333333
+1,aliens mentirosos,Negativos,16.666666666666668
+0,un algoritmo para calcular el dia del fin del mundo,Positivos,87.87878787878788
+1,un algoritmo para calcular el dia del fin del mundo,Negativos,12.121212121212121
+0,juego del grafimar,Positivos,94.44444444444444
+1,juego del grafimar,Negativos,5.555555555555555
+0,¿leonardo di caprio es perfecto?,Positivos,97.43589743589743
+1,¿leonardo di caprio es perfecto?,Negativos,2.5641025641025643
+0,scrampty,Positivos,95.23809523809524
+1,scrampty,Negativos,4.761904761904762
+0,maquina para transformar cafe en teoremas,Positivos,98.24561403508773
+1,maquina para transformar cafe en teoremas,Negativos,1.7543859649122806
+0,toros y vacas,Positivos,94.44444444444444
+1,toros y vacas,Negativos,5.555555555555555
+0,sin especificar,Positivos,94.44444444444444
+1,sin especificar,Negativos,5.555555555555555
