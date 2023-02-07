@@ -44,4 +44,8 @@ Con la información y conjuntos de datos obtenidos en las notebook's anteriores,
 
 [Link](https://luisapaez.github.io/Proyectos_AnalisisDatos/CursoPrope/TableroPowerBI/DiagramaRelacional.html)
 
+Utilizando el diagrama relacional anterior obtendremos dos diagramas estrella, los cuales serán utilizados para crear, ahora sí, un tablero en Power BI.
 
+[Archivo PDF](Resumen_curso_propedeutico.pdf)
+
+[Archivo pbix](TableroPowerBI/Tablero.pbix)
