@@ -16,11 +16,16 @@ Ahora bien, para la información recopilada consideraremos dos archivos csv:
 
 * Asistencias: Recopila la asistencia de los participantes del curso propedéutico en la primer semana del curso (es decir, recopila las asistencias de 5 días).
 
-[Archivo csv](Datasets\Asistencias.csv)
+[Archivo csv](Datasets/Asistencias.csv)
 
 Con base en lo anterior, es natural enfocar nuestro análisis de datos en ver las evaluaciones que se les dieron a cada uno de los talleres, o ver de manera global la evalución conjunta de todos los talleres para determinar una evalución general al curso propedéutico. Podremos ver también cuáles fueron los aspectos (o preguntas de la encuesta) que obtuvieron mejor o peor respuesta; por ejemplo, si logramos identificar las preguntas de la encuesta que obtuvieron peor respuesta, se puede enfocar más en dicho tema o abordarlo de una manera distinta en los siguientes cursos propedéuticos. En teoría, cada participante debía responder sólo una vez la encuesta en dicha primer semana.
 
-Asimismo, podemos ver el comportamiento de los participantes entorno a sus asistencias. Por ejemplo, puede ser que el día viernes asistieron menos participantes a los talleres respecto a los demás días, o tal vez, el día en que asistieron más participantes fue, justamente, el primer día del curso (lunes). Lo anterior podremos responderlo de una manera certera.
+Asimismo, podemos ver el comportamiento de los participantes entorno a sus asistencias. Por ejemplo, puede ser que el día viernes asistieron menos participantes a los talleres respecto a los demás días, o tal vez, el día en que asistieron más participantes fue, justamente, el primer día del curso (lunes). Lo anterior podremos responderlo de una manera certera. Así, lo dicho antes representa el punto de partida y el camino que debemos seguir respecto a nuestro análisis de datos.
 
-Así, lo dicho antes representa el punto de partida y el camino que debemos seguir respecto a nuestro análisis de datos.
+### Notebook's de Python
 
+En la primer notebook realizamos la carga y limpieza de la información. Adicionalmente, realizamos un primer análisis de la información en la cual obtuvimos:
+
+* Gráficos informativos.
+* Primeras conclusiones.
+* Conjuntos de datos para posteriormente realizar un tablero en Power BI.
