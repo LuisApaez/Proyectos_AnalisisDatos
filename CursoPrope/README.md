@@ -40,8 +40,8 @@ En la segunda notebook analizaremos los comentarios que los estudiantes escribie
 
 ### Tablero 
 
-Con la información y conjuntos de datos obtenidos en las notebook's anteriores, crearemos un tablero utilizando Power BI. Antes de ello creamos un modelo relacional:
+Con la información y conjuntos de datos obtenidos en las notebook's anteriores, crearemos un tablero utilizando Power BI. Antes de ello creamos un diagrama relacional:
 
-[Link](TableroPowerBI/DiagramaRelacional.html)
+[Link](https://luisapaez.github.io/Proyectos_AnalisisDatos/CursoPrope/TableroPowerBI/DiagramaRelacional.html)
 
 
