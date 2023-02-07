@@ -38,4 +38,10 @@ En la segunda notebook analizaremos los comentarios que los estudiantes escribie
 
 [Archivo ipynb](analisis_datos_notebook_2.ipynb)
 
+### Tablero 
+
+Con la información y conjuntos de datos obtenidos en las notebook's anteriores, crearemos un tablero utilizando Power BI. Antes de ello creamos un modelo relacional:
+
+[Link](TableroPowerBI/DiagramaRelacional.html)
+
 
