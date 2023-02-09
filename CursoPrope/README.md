@@ -49,3 +49,9 @@ Utilizando el diagrama relacional anterior obtendremos dos diagramas estrella, l
 [Archivo PDF](Resumen_curso_propedeutico.pdf)
 
 [Archivo pbix](TableroPowerBI/Tablero.pbix)
+
+Finalmente creamos una presentación en Power Point presentando los resultados obtenidos.
+
+[Archivo PDF](Presentación.pdf)
+
+[Archivo pptx](Curso propedéutico 2022.pptx)
