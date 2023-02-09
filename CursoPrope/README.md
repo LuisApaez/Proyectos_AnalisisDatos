@@ -54,4 +54,4 @@ Finalmente creamos una presentación en Power Point presentando los resultados o
 
 [Archivo PDF](Presentación.pdf)
 
-[Archivo pptx](Curso propedéutico 2022.pptx)
+[Archivo pptx](Presentación.pptx)
