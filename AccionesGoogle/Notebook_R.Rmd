@@ -1,0 +1,254 @@
+---
+title: "Series de tiempo"
+author: "Luis Fernando Apáez Álvarez"
+---
+
+## Descripción
+
+Lo que haremos en este proyecto es buscar ajustar un modelo estadístico a la serie de tiempo resultante de los precios de apertura de las acciones de Google de mayo del 2021 a octubre del 2022. Para ello implementaremos propiamente un análisis de la serie de tiempo buscando un modelo adecuado para ajustarle.
+
+## Análisis Exploratorio
+
+```{r setup, include=FALSE}
+rm(list = ls(all.names = TRUE))
+gc()
+library(reticulate) # Path to python3.exe
+knitr::opts_chunk$set(warning = F, message = F, error = F, fig.height = 4, fig.width = 8)
+library(xtable)
+library(knitr)
+library(latex2exp)
+library(ggplot2)
+library(dplyr)
+library(forecast)
+library(astsa)
+library(nortest)
+library(lmtest)
+library(GGally)
+library(ggfortify)
+library(fGarch)
+options(digits=2)
+set.seed(20202)
+```
+
+
+Comenzamos por cargar los datos
+
+```{r}
+data <- read.csv('df_goog.csv')
+
+head(data)
+```
+
+
+La variable que será de nuestro interés es ``Open``, la cual se encuentra en la columna 2:
+
+```{r}
+head(data[2])
+```
+que corresponde a los precios de apertura del precio de las acciones de google del 10 de mayo del 2021 al 31 de octubre de ese mismo año. De tal manera, trabajaremos únicamente con dicha columna
+
+
+```{r}
+# Almacenamos los valores de Open
+data_filtro <- data[2]
+
+# Convertimos los datos a una serie de tiempo
+data_filtro_st <- ts(data_filtro, frequency = 1)
+```
+
+
+Veamos un gráfico de los datos
+
+```{r}
+# Graficamos
+autoplot(data_filtro_st)  +
+  # agregamos algunas etiquetas
+  labs(title = "Precios de apertura de Google",
+       x = "Día",
+       y = "Precio",
+       caption = "Mayo 2021-octubre 2022")
+```
+
+podemos notar cierto comportamiento de volatilidad en nuestros datos. Además, podemos notar cierta irregularidad entorno a la varianza, esto es, la varianza no es constante. Asimismo, es clara una tendencia a la baja.
+
+Veamos algunas estadísticas
+
+```{r}
+summary(data_filtro_st)
+```
+
+donde el precio mínimo registrado en dicho período es de 105 dólares; el precio máximo de \$152 y el 75% de los datos tienen un precio menor o igual a \$142.
+
+```{r}
+ggAcf(data_filtro_st) + labs(title = "Gráfico ACF")
+ggPacf(data_filtro_st) + labs(title = "Gráfico PACF")
+```
+
+donde, del gráfico ACF vemos una fuerte correlación entre los datos de modo que, dado un dato $i$, tenemos que éste dependerá de todos los datos $j<i$, en cierta medida. 
+
+### Ajuste de la tendencia
+
+Se hará mediante un modelo de regresión polinomial de grado 6:
+
+```{r}
+t <- time(data_filtro_st)
+
+# Creamos un dataframe auxiliar 
+df_aux = data.frame("Tiempo" = min(t):max(t),
+                    "Open" = data[2])
+# Graficamos la serie de tiempo
+ggplot(data=df_aux, aes(x = Tiempo, y = Open)) +
+  geom_line() + 
+  # Graficamos la regresion polinomial
+  geom_smooth(method='lm', formula=y~x+I(x^2)+I(x^3)+I(x^4)+
+              I(x^5)+I(x^6)+I(x^7), se=FALSE, col='darkblue')+
+  labs(title = "Ajuste de la regresión polinomial")
+```
+
+veamos un ajuste bastante bueno entorno al comportamiento general de la tendencia de la serie de tiempo.
+
+## Ajustando un modelo
+
+Al inicio notamos que el comportamiento de la serie de tiempo sigue cierta volatilidad, lo culal podría ser factor importante a la hora de intentar ajustar un modelo del tipo ARIMA. Para comprobar lo anterior, realicemos un ajuste de la serie de tiempo a un modelo ARIMA:
+
+```{r}
+fit_arima <- auto.arima(data_filtro_st)
+fit_arima
+```
+lo cual parece indicar que un ajuste tantativo del modelo sería un $ARIMA(0,1,0)$.
+
+Realizaremos un análisis rápido sobre los supuestos de este modelo:
+
+* Normalidad: Gráficamente podemos observar que 
+
+```{r warning=FALSE}
+# Graficamos un histograma de los residuales
+
+ggplot(fit_arima, aes(x=fit_arima$residuals)) + geom_histogram(bins=12)
+```
+
+lo cual nos da posibles indicios de que los residuales sí siguen una distribución normal. Continuando
+
+```{r}
+qqnorm(fit_arima$residuals)
+qqline(fit_arima$residuals, col="red")
+grid()
+```
+
+
+al parecer los residuales siguen cierta normalidad, pero vemos un comportamiento peculiar en la cola superior. Comprobamos mediante prueba de hipótesis:
+
+```{r}
+# Prueba de Anderson-Darling 
+ad.test(fit_arima$residuals)
+```
+se rechaza $H_{0}$, esto es, se considera plasible asumir que los residuales no sigue una distribución normal, entonces este supuesto no se está cumpliendo.
+
+* Independencia en las observaciones: Claramente este supuesto no se cumple, lo cual comprobamos mediante el siguiente gráfico de las correlaciones:
+
+```{r}
+ggAcf(data_filtro_st)
+```
+
+
+pues todas las observaciones se encuentran fuera del intervalo de confianza que nos asegura, bajo cierta confianza, que las observaciones son independientes entre sí. 
+
+Se concluye entonces que el modelo propuesto no está cumpliendo con los supuestos adecuados, de modo que éste es deficiente y poco preciso. El hecho anterior, en realidad, es algo que ya se sabía, pues dada la estructura y la naturaleza de los datos, el modelo ARIMA no es el adecuado para modelar los datos, en su lugar utilizaremos un modelo de heterocedasticidad condicional.
+
+### Modelo GARCH
+
+Notamos un comportamiento peculiar en esta serie de tiempo, pues podemos ver “picos” atípicos al comportamiento general. Lo anterior tiene una repercusión directa en la variabilidad de los datos y en general veremos que la modelación de tipo ARIMA no será la adecuada para series que presenten comportamientos de volatilidad.
+
+Utilizaremos entonces un modelo GARCH (modelo autoregresivo generalizado de heterocedasticidad condicional), en el cual la varianza futura depende de la varianza histórica y ésta depende de las observaciones. Este modelo se ocupa para predecir la volatilidad a mediano y corto plazo, además de capturar las agrupaciones de volatilidad. Para trabajar con este modelo se utilizarán los log-rendimientos, en los cuales se elimina la tendencia y se busca capturar de manera directa los comportamientos o posibles patrones de los datos:
+
+```{r}
+# Quitamos la tendencia (diff) y extraemos 
+# de manera directa los comportamientos de los
+# datos
+Xt <- data_filtro_st
+logs <- diff(log(Xt)) 
+ggtsdisplay(logs)
+```
+
+En particular, observemos el gráfico de los log-rendimientos:
+
+```{r}
+autoplot(logs)
+```
+
+en el cual vemos picos drásticos en comparación con el comportamiento general de la serie, es decir, podemos visualizar las volatilidades de los datos. Luego, ajustaremos un primero modelo del tipo GARCH para el cual comprebemos primero que la serie de tiempo sigue un efecto ARCH
+
+```{r}
+library(FinTS)
+#Generamos el modelo ARCH a un rezago
+ModeloARCH1 <- ArchTest(logs, lags = 1, demean = TRUE)
+
+#Revisamos
+ModeloARCH1
+```
+
+donde se rechaza $H_{0}$, es decir, si hay efectos ARCH sobre nuestros datos. Continuando
+
+```{r}
+# Ajuste del modelo GARCH(1,1) sobre los log-rendimientos utilizando como distribución condicional una normal
+Gmod <- garchFit(formula = ~ garch(1,1), data = logs, cond.dist="std", trace=FALSE)
+summary(Gmod)
+```
+donde vemos varias pruebas de Ljung-Box para verificar el supuesto de la normalidad.
+
+Podemos realizar predicciones a 30 tiempos futuros
+
+```{r}
+predict(Gmod, n.ahead=30, plot=TRUE, nx=252)
+```
+que nos arroja un proyección esperada de los precios a 30 tiempos futuros.
+
+Pasamos de los rendimientos logarítmos a los rendimientos en la escala original utilizando la fórmula:
+
+$$
+rendi = e^{log \ rendi} - 1
+$$
+
+el cual aplicamos al promedio de la predicción:
+
+```{r}
+exp(0.00058) - 1
+```
+
+Lo cual nos dice que el promedio de la predicción sobre los rendimientos es del 0.058%, donde de acuerdo al intervalo de predicción, los rendimientos pueden llegar a ser superiores al 5% o presentar pérdidas superiores al 5%.
+
+El modelo ajustado anteriormente fue un primer candidato, luego, utilizando los criterios de información AIC y BIC buscaremos un mejor modelo.
+
+
+## Comparación de modelos
+
+Usualmente, los parámetros referentes a un modelo GARCH varían entre 1 y 2. De tal manera, probaremos con los siguientes modelos:
+
+```{r}
+Gmod2 <- garchFit(formula = ~ garch(2,1), data = logs,
+                  # Utilizamos como distribucion condicional la t de student
+                  cond.dist="std", trace=FALSE)
+summary(Gmod2)
+```
+
+```{r}
+Gmod3 <- garchFit(formula = ~ garch(2,2), data = logs, cond.dist="std", trace=FALSE)
+summary(Gmod3)
+```
+```{r}
+Gmod4 <- garchFit(formula = ~ garch(1,2), data = logs, cond.dist="std", trace=FALSE)
+summary(Gmod4)
+```
+Los valores de los criterios de información parecen no variar mucho, o nada. De tal manera, elegir cualquiera de ellos es apropiado.
+
+Por ejemplo, utilizando el modelo ``Gmod2`` podemos ver las predicciones
+
+```{r}
+predict(Gmod2, n.ahead = 5, plot=TRUE, nx=10)
+```
+
+notamos que los intervalos de predicción son del -6% al 6%, y donde el promedio de la predicción es de 0.062 %, que representa un diferencia pequeña respecto al primer modelo GARCH ajustado.	
+
+
+
+
