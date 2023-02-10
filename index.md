@@ -4,5 +4,4 @@
 [Link diagrama relacional](CursoPrope/TableroPowerBI/DiagramaRelacional.html)
 
 * Proyecto 2
-
 [Pagina web de la notebook R](AccionesGoogle/Notebook_pagina.html)
