@@ -5,3 +5,7 @@ En este repositorio hallarás varios proyectos enfocados al análisis de datos, 
 1. Análisis de datos sobre información generada de encuestas hechas a los estudiantes del curso propedéutico de la Facultad de Ciencias de la UNAM (2022).
 
 [Descripción del proyecto](CursoPrope/README.md)
+
+2. Análisis de datos, junto con la implementación de modelos predictivos (regresión lineal y redes neuronales), sobre los precios históricos de las acciones de Google (Alphabet).
+
+[Descripción del proyecto](AccionesGoogle/README.md)
