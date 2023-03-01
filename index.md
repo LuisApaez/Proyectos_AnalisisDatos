@@ -6,3 +6,6 @@
 * Proyecto 2:
   * [Pagina web de la notebook R](AccionesGoogle/Notebook_pagina.html)
   * [Libreta sobre la red neuronal LSTM](AccionesGoogle/Prediccion2_LSTM.html)
+
+* Proyecto 3:
+[Página web de la notebook R](ModeloARIMA1/ModeloARIMA1.html)
