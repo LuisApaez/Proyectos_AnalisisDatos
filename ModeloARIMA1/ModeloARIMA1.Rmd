@@ -1,0 +1,489 @@
+---
+title: "Modelo del tipo ARIMA"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 5
+    toc_float:
+      collapse: no
+      smooth_scroll: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+author: "Autor: Luis Fernando Apáez Álvarez"
+---
+
+
+```{r setup, include=FALSE}
+# devtools::install_github("FinYang/tsdl")
+knitr::opts_chunk$set(echo=TRUE, error=FALSE, warning=FALSE, message=FALSE)
+library(tsdl)
+library(forecast)
+library(nortest)
+library(tseries)
+library(ggfortify)
+library(lmtest)
+library(car)
+# library(devtools)
+library(MASS)
+library(fpp)
+library(astsa)
+library(lmtest)
+library(fGarch)
+library(vars)
+library(rmgarch)
+library(quantmod)
+library(ggfortify)
+library(ggplot2)
+library(astsa)
+```
+
+---
+
+## Análisis descriptivo de los datos
+
+Comenzamos por cargar y ver la serie de tiempo:
+
+```{r, echo= TRUE}
+ts <- tsdl[[91]]
+
+# veamos un poco de informacion sobre dicha serie
+attributes(ts)
+```
+Gráficamente vemos la serie de tiempo
+
+```{r, echo= TRUE, fig.align='center'}
+autoplot(ts, main = "Daily maximum temperatures in Melbourne, Australia, 1981-1990")
+``` 
+
+En primera instancia, tenemos que la tendencia y la varianza parecen ser contantes pues no se aprecia un crecimiento tan grande en la dispersión de los datos.  
+
+En realidad, podemos notar que tenemos una tendencia aditiva pues los datos se comportan de una manera lineal. Por último, se puede observar que tiene ciclo estacional con periocidad de cada 365 días, lo cual podemos corroborar con los gráficos ``acf`` y ``pacf``:
+
+```{r, out.width='50%', fig.align='center'}
+ggAcf(ts, main="Acf plot")
+```
+
+```{r, out.width='60%', fig.align='center'}
+ggPacf(ts, main="Pacf plot")
+```
+
+Continuamos observando que la serie de tiempo no tiene datos faltantes:
+
+```{r, echo=TRUE}
+# Suma de los datos faltantes en la serie de tiempo
+sum(is.na(ts))
+```
+
+De tal modo, no será necesario realizar imputaciones.  
+
+
+## Descomposición clásica
+ 
+De acuerdo con los diferentes opciones para la descomposición clásica de la serie de tiempo, optamos por utilizar un modelo de regresión para obtener la tendencia y/o ciclos estacionales que pueda tener la serie con la que estamos trabajando. 
+ 
+Como se dijo en el análisis descriptivo, nos parece que la tendencia se comporta de manera lineal, sin embargo no estamos completamente seguros. Por lo anterior, podemos ajustar en el modelo de regresión lineal un cierto comportamiento polinomial, esto es:
+
+
+```{r, echo= TRUE}
+t <- time(ts)-1981
+M <- factor(cycle(ts))
+
+t2 <- t^2
+t3 <- t^3
+t4 <- t^4
+t5 <- t^5
+t6 <- t^6
+t7 <- t^7
+t8 <- t^8
+t9 <- t^9
+
+
+# ajuste del modelo
+reg <- lm( ts ~ 0 + t + t2+ t3+ t4+ t5 + t6 + t7 + t8 + t9 + M , na.action=NULL)
+
+# analisis de varianza
+anova(reg)
+
+# Valor de la r^2
+summary(reg)$r.squared
+```
+
+Apoyándonos en el resumen de los datos con base en la regresión lineal que se hizo, se aprecia que el modelo es considerablemente bueno pues $R^2 = 0.9624$.  
+
+Para visualizar el ajuste mediante la regresión, proseguimos a contrastar los resultados de éste versus los datos originales mediante una gráfica:
+
+```{r, echo= TRUE, fig.align='center'}
+# Grafico de la serie de tiempo
+plot(ts, type = "o")
+# Ajuste de la regresion
+lines(fitted(reg), col = "#CD6600", lwd = 3)
+# Etiquetas
+legend(x = "topleft", c("Original", "ajuste"), fill = c("black", "#CD6600"))
+```
+
+De lo anterior, podemos obtener la tendencia y el ciclo estacional de la serie de tiempo.  
+
+* Para obtener la tendencia debemos excluir el ciclo estacional de la serie de tiempo ($M$), lo cual haremos de la siguiente manera: 
+
+```{r, echo= TRUE, fig.align='center'}
+
+# Regresion sin ciclo (es decir, componente de la tendencia)
+reg_tend <- lm(ts ~ 0+ t + t2+ t3+ t4+ t5 + t6 + t7 + t8 + t9, na.action=NULL)
+
+# Graficamos los resultados
+plot(ts, type = "o")
+# Grafico de la tendencia
+lines(fitted(reg_tend), col = "#66CD00", lwd = 3)
+# Etiquetas
+legend(x = "topleft", c("Original", "tendencia"), fill = c("black", "#66CD00"))
+```
+
+notamos a partir del ajuste que, en efecto, la tendencia parece ser constante como se había mencionado previamente.
+
+* Para obtener el ciclo estacional anularemos todas las variables de tiempo que se utilizaron en la regresión lineal y así quedarnos solo con el ciclo.  
+
+```{r, echo= TRUE}
+# Ajuste de la regresion
+reg_cicl <- lm(ts ~ 0 + M, na.action = NULL)
+
+# Graficamos los resultados
+plot(ts, type = "o")
+lines(fitted(reg_cicl), col = "#66CD00", lwd = 3)
+legend(x = "topleft", c("Original", "ciclo estacional"), fill = c("black", "#66CD00"))
+```
+
+vemos que el ajuste del ciclo es bastante bueno y capta el patrón.
+
+
+A partir del ```ACF`` y el ``PACF`` podemos determinar que el modelo adecuado para esta serie de tiempo podría ser un $AR$. Antes de realizar el ajuste, debemos ver si los datos cumplen con los supuestos de normalidad, varianza constante, independencia y estacionariedad, y partir de esto obtener el mejor modelo.  
+
+## Análisis de los supuestos
+
+### Normalidad
+
+Observamos el $p-value$ resultante de la prueba de Anderson-Darling y la respectiva gráfica ``qqplot``:
+
+```{r, echo=TRUE}
+ad.test(ts)
+```
+
+```{r, fig.align='center'}
+qqPlot(ts)
+```
+
+
+Con la prueba de normalidad anterior, tenemos un $p-value<2.2 e^{-16}$ por lo que no tenemos suficiente evidencia para aceptar $H_0$, de tal manera asumimos que no se cumple el supuesto de la normalidad.
+
+### Varianza constante
+
+Procedemos a realizar dos pruebas de hipótesis para verificar si la varianza es contante o no:
+
+```{r, echo=TRUE}
+# Definimos las variables para realizar las pruebas
+Y <- as.numeric(ts)
+X <- 1:length(ts)
+
+# Test
+bptest(Y~X)
+ncvTest(lm(Y~X))
+```
+
+En ambas pruebas obtenemos que $p-value<0.05$, con lo que podemos decir que no hay evidencia suficiente para aceptar $H_0$, por lo tanto asumimos plausible la hipótesis alternativa: la varianza no es constante.
+
+### Independencia
+
+Realizamos una prueba para la correlación de los datos para algunos valores específicos
+
+```{r, echo= TRUE}
+Box.test(ts)
+Box.test(ts,lag=1*365)
+Box.test(ts,lag=2*365)
+Box.test(ts,lag=3*365)
+Box.test(ts,lag=4*365)
+Box.test(ts,lag=5*365)
+```
+
+De acuerdo con las diferentes pruebas, ningún _lag_ pasa la prueba de independencia.
+
+### Estacionariedad
+
+```{r, echo= TRUE, warning=FALSE}
+adf.test(ts)
+```
+
+Con la prueba de Dickey Fuller obtuvimos un $p-value = 0.01$, por lo que no hay evidencia suficiente para aceptar $H_0$, de modo que asumimos plausible decir que la serie de tiempo es estacionaria.
+
+Con base en los resultados de los supuestos, se puede ver que es necesario aplicarle una transformación a los datos. Proponemos trabajar con un ciclo de 12 en lugar de uno de 365. De tal manera, procedemos de la siguiente manera:
+
+```{r, echo= TRUE}
+# variables auxiliares
+Yt <- c()
+t <- c()
+u <- c()
+
+# Realizamos propiamente el cambio del ciclo
+for(i in 1:121){
+  
+  for(j in 1:30){
+    t[j]= ts[(i-1)*30 + j]
+  }
+  
+  Yt[i] = max(t)
+}
+
+for(j in 1:20){
+  u[j]= ts[(121)*30 + j]
+}
+
+Yt[122] <- max(u)
+
+ts_2 <- ts(Yt, start = c(1981,1), end = c(1991,2), frequency = 12)
+```
+
+Con esto tenemos una serie de tiempo con observaciones mensuales por lo que tendríamos un período de 12 con el que será más fácil trabajar.
+
+```{r, echo= TRUE, fig.align='center'}
+# Observamos la gráfica de los datos transformados
+ggtsdisplay(ts_2)
+```
+
+Después, utilizamos la función ``auto.arima()`` para ver un posible modelo que se acople a nuestros datos:
+
+```{r}
+auto.arima(ts_2)
+```
+
+Con lo anterior, probamos el siguiente modelo
+
+```{r, echo=TRUE}
+mod1 <- arima(ts_2, order=c(p=0, d=0, q=0), 
+              seasonal=list(order=c(P=0, D=1, Q=1), period = 12))
+
+mod1
+```
+
+## Supuestos del modelo ARIMA 1 
+
+Ahora que tenemos el modelo, comprobaremos que se cumplen los siguientes supuestos:
+
+## Normalidad
+
+```{r, echo=TRUE}
+# Prueba de hipotesis
+ad.test(mod1$residuals)
+```
+
+```{r, fig.align='center'}
+# Grafico qqplot
+qqPlot(mod1$residuals)
+```
+
+Con esto podemos ver que este modelo tampoco cumple con el supuesto de normalidad.
+
+### Varianza constante
+
+```{r, echo=TRUE, fig.align='center'}
+# Variables auxiliares
+Y <- as.numeric(mod1$residuals)
+X <- 1:length(mod1$residuals)
+
+# Test
+bptest(Y ~ X)
+ncvTest(lm(Y~X))
+```
+
+Con esto vemos que el modelo SI cumple con el supuesto de varianza constante.
+
+### Independencia
+
+```{r, echo= TRUE, fig.align='center'}
+Box.test(mod1$residuals)
+Box.test(mod1$residuals,lag=1*12)
+Box.test(mod1$residuals,lag=2*12)
+Box.test(mod1$residuals,lag=3*12)
+Box.test(mod1$residuals,lag=4*12)
+Box.test(mod1$residuals,lag=5*12)
+```
+
+Podemos ver que para lag 24 y 36 no se cumple con la independencia, sin embargo, para los demás si se cumple. De esto podemos concluir que habría que hacer algún ajuste al modelo puesto que este supueto tampoco se está cumpliendo.
+
+### Estacionariedad
+
+```{r, echo= TRUE, warning=FALSE}
+adf.test(mod1$residuals)
+```
+
+Por último, este modelo si cumple con el supuesto de estacionariedad.
+
+Ajustaremos un nuevo modelo, para poder modelar mejor la dependencia.
+
+## Supuestos del modelo ARIMA 2 
+
+```{r, echo=TRUE}
+mod2 <- arima(ts_2, order = c(p=0, d=0, q=0), 
+              seasonal=list(order=c(P=1, D=1, Q=1), period = 12))
+
+mod2
+```
+
+Ahora que tenemos el modelo, comprobaremos que se cumplen los siguientes supuestos.
+
+### Normalidad
+
+```{r, echo=TRUE}
+ad.test(mod2$residuals)
+```
+
+```{r, fig.align='center'}
+qqPlot(mod2$residuals)
+```
+
+
+Con estas pruebas podemos ver que ningún modelo trabajado, hasta ahora, cumple con normalidad.
+
+### Varianza constante
+
+```{r, echo=TRUE, fig.align='center'}
+# Variables auxiliares
+Y <- as.numeric(mod2$residuals)
+X <- 1:length(mod2$residuals)
+
+# Test
+bptest(Y ~ X)
+ncvTest(lm(Y~X))
+```
+
+Es plausible asumir que el modelo posee varianza constante.
+
+
+### Independencia
+
+```{r, echo= TRUE, fig.align='center'}
+Box.test(mod2$residuals)
+Box.test(mod2$residuals,lag=1*12)
+Box.test(mod2$residuals,lag=2*12)
+Box.test(mod2$residuals,lag=3*12)
+Box.test(mod2$residuals,lag=4*12)
+Box.test(mod2$residuals,lag=5*12)
+```
+
+Notamos que, ahora, con el ajuste del segundo modelo el supuesto de la independencia parece estar cumpliéndose. De manera general podemos emplear la prueba _Ljung-Box_ donde:
+
+* $H_{0}$: Los datos se distribuyen de manera independiente.
+* * $H_{1}$: Los datos NO se distribuyen de manera independiente.
+
+La cual no dependerá de los _lags_, como lo vimos antes, y en su lugar trabajaremos en general con los datos.
+
+```{r, echo= TRUE, fig.align='center'}
+Box.test(mod2$residuals, type = "Ljung-Box") 
+
+# nos interesan p-value > alpha
+ggtsdiag(mod2)
+```
+
+Comprobamos entonces, bajo cierto nivel de confianza, que los datos se distribuyen aleatoriamente.
+
+### Estacionariedad
+
+```{r, echo= TRUE}
+adf.test(mod2$residuals)
+```
+
+Por último, tenemos que se cumple la estacionariedad.
+
+Con este modelo se realiza un buen ajuste, ya que cumple con todos los supuestos, a excepción de la normalidad. Podemos no ser tan estrictos y optar por quedarnos con el modelo ``mod2``.
+
+
+## Prónostico
+
+### Utilizando Holt-Winters
+
+Para la parte del pronóstico utilizaremos, inicialmente, el método de _Holt-Winters_. Antes, definimos una función para dar una salida del gráfico de predicción mucho más agradable, la cual llamaremos HWplot3
+
+```{r, include=FALSE}
+library(reshape)
+ 
+ 
+HWplot3 <- function(ts_object,  n.ahead=4,  CI=.95,  error.ribbon='blue', line.size=1){
+     
+    hw_object<-HoltWinters(ts_object)
+     
+    forecast<-predict(hw_object,  n.ahead=n.ahead,  prediction.interval=T,  level=CI)
+     
+     
+    for_values<-data.frame(time=round(time(forecast),  3),  value_forecast=as.data.frame(forecast)$fit,  dev=as.data.frame(forecast)$upr-as.data.frame(forecast)$fit)
+     
+    fitted_values<-data.frame(time=round(time(hw_object$fitted),  3),  value_fitted=as.data.frame(hw_object$fitted)$xhat)
+     
+    actual_values<-data.frame(time=round(time(hw_object$x),  3),  Actual=c(hw_object$x))
+     
+     
+    graphset<-merge(actual_values,  fitted_values,  by='time',  all=TRUE)
+    graphset<-merge(graphset,  for_values,  all=TRUE,  by='time')
+    graphset[is.na(graphset$dev),  ]$dev<-0
+     
+    graphset$Fitted<-c(rep(NA,  NROW(graphset)-(NROW(for_values) + NROW(fitted_values))),  fitted_values$value_fitted,  for_values$value_forecast)
+     
+     
+    graphset.melt<-melt(graphset[, c('time', 'Actual', 'Fitted')], id='time')
+     
+  p <- ggplot(graphset.melt,  aes(x=time,  y=value)) + geom_ribbon(data=graphset, aes(x=time, y=Fitted, ymin=Fitted-dev,  ymax=Fitted + dev),  alpha=.2,  fill=error.ribbon) + geom_line(aes(colour=variable), size=line.size) + geom_vline(xintercept=max(actual_values$time),  lty=2) + xlab('Time') + ylab('Value') + labs(legend.position='bottom') + scale_colour_hue('')
+    return(p)
+ 
+}
+```
+
+Después, realizamos la predicción a un año con los intervalos de predicción visibles:
+
+```{r, fig.align='center', warning=FALSE}
+HWplot3(ts_2, n.ahead = 12)
+```
+
+### Utilizando el modelo ARIMA 2
+
+En este caso realizaremos, de igual manera, el pronóstico a un año, pero ahora utilizando el modelo ARIMA almacenado en ``mod2``: 
+
+```{r}
+# libreria necesaria
+ library(forecast)
+
+pronostico <- forecast(mod2, 12, level=95)
+plot(pronostico, main="Pronóstico")
+```
+
+vemos que en ambos casos los pronósticos parecen ser muy similares:
+
+```{r}
+# Ajustamos el modelo holt-winters
+holt <- HoltWinters(ts_2)
+
+# Realizamos el pronostico con dicho modelo
+pronostico_holt <- predict(holt,  n.ahead=12, prediction.interval=T,  level=0.95)
+
+# Creamos un dataframe con las predicciones de ambos modelos
+pred <- data.frame(
+  "Holt"=pronostico_holt[1:12],
+  "Arima"=as.data.frame(pronostico)[,1])
+
+pred
+```
+o de manera gráfica mediante un diagrama de líneas referente a las predicciones con ambos modelos:
+
+```{r}
+plot(x=1:12, pred$Holt, type="l", col = "red", ylab=" ",
+     xlab=" ", main="Comparación de pronósticos")
+par(new=TRUE)
+plot(x=1:12, pred$Arima, type="l", col = "darkblue", ylab=" ",
+     xlab=" ")
+grid()
+```
+
+Tenemos entonces que las predicciones entre el modelo ARIMA y el modelo Holt-Winters han sido muy similares.
+
+
+
+
+
+
+
