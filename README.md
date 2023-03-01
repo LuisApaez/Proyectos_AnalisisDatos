@@ -9,3 +9,7 @@ En este repositorio hallarás varios proyectos enfocados al análisis de datos, 
 2. Análisis de datos, junto con la implementación de modelos predictivos (regresión lineal y redes neuronales), sobre los precios históricos de las acciones de Google (Alphabet).
 
 [Descripción del proyecto](AccionesGoogle/README.md)
+
+3. (Miniproyecto) Análisis estadístico sobre una serie de tiempo referente a la dinámica de la temperatura corporal del castor canadensis. Se realizó la implementación de un modelo del tipo ARIMA y además se realizaron pronósticos utilizando Holt-Winters.
+
+[Descripción del proyecto](ModeloARIMA1/README.md)
